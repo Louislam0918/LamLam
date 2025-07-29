@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「居家支援」計劃互動指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutral & Soft Teal -->
+    <!-- Application Structure Plan: The application is structured around a central user choice: "New User" vs. "Existing HCP User". This choice tailors the displayed information, ensuring relevance and reducing cognitive load. For new users, the flow focuses on the application process, available support levels (visualized with a chart), and a co-payment calculator. For existing ("grandfathered") users, it focuses on reassuring them about the "no disadvantage" principle, explaining unspent funds, and highlighting new benefits like AT-HM. This user-centric, task-oriented design is more intuitive than mirroring the dense manual's structure. -->
+    <!-- Visualization & Content Choices: 1. Ongoing Services: A bar chart (Chart.js) is used to compare the 8 funding levels, making abstract financial data easy to grasp. Interaction: Hover for details. Justification: Visual comparison is more effective than a table for showing magnitude. 2. Co-payment: An interactive selector (JS DOM manipulation) is used instead of a static table. Interaction: User selects status and service type to see their specific co-payment. Justification: Personalizes complex information and answers the user's direct question. 3. Application Process: A clickable step-by-step diagram (HTML/Tailwind) organizes the procedure. Interaction: Click to expand details. Justification: Simplifies a multi-stage process and allows paced learning. 4. Grandfathered Info: Simple informational cards (HTML/Tailwind) are used for clarity and directness. Justification: Key transitional rules need to be stated clearly without distracting interactions. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .tab-active {
+            border-color: #0d9488;
+            background-color: #ccfbf1;
+            color: #134e4a;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            border-color: transparent;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .content-hidden {
+            display: none;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-800">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-5xl">
+
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-teal-800 mb-2">居家支援 (Support at Home) 計劃</h1>
+            <p class="text-lg md:text-xl text-slate-600">您的個人化互動指南</p>
+        </header>
+
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold mb-2">首先，請告訴我們您的情況</h2>
+                <p class="text-slate-600">選擇最符合您情況的選項，我們將為您顯示最相關的資訊。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <button id="btnNewUser" class="user-type-btn p-6 text-lg font-bold border-2 rounded-xl text-center transition-all duration-300">
+                    <span class="text-3xl mb-2 block">👋</span> 我是新用戶
+                    <span class="block text-sm font-normal text-slate-500 mt-1">我想了解如何申請及可獲支援</span>
+                </button>
+                <button id="btnExistingUser" class="user-type-btn p-6 text-lg font-bold border-2 rounded-xl text-center transition-all duration-300">
+                    <span class="text-3xl mb-2 block">👴👵</span> 我已在使用居家護理服務 (HCP)
+                    <span class="block text-sm font-normal text-slate-500 mt-1">我想知道新計劃對我有何影響</span>
+                </button>
+            </div>
+
+            <main id="mainContent" class="content-hidden">
+                
+                <!-- Section for New Users -->
+                <div id="newUserContent" class="content-section space-y-8">
+                    
+                    <div class="p-6 bg-teal-50 border-l-4 border-teal-500 rounded-r-lg">
+                        <h3 class="text-2xl font-bold text-teal-800 mb-4">新用戶指南：三步了解您的支援</h3>
+                        <p class="text-teal-700">歡迎！「居家支援」計劃旨在幫助您在家中獨立、安全地生活。以下是您需要了解的關鍵資訊，我們將引導您完成整個過程。</p>
+                    </div>
+
+                    <!-- 1. Application Process -->
+                    <div>
+                        <h4 class="text-xl font-bold mb-4 text-center">第一步：輕鬆了解申請流程</h4>
+                        <div class="space-y-2">
+                            <div class="accordion-item bg-white border border-slate-200 rounded-lg">
+                                <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold">
+                                    <span>1. 聯絡 My Aged Care (一切的起點)</span>
+                                    <span class="accordion-icon text-teal-600 text-2xl transform transition-transform duration-300">＋</span>
+                                </button>
+                                <div class="accordion-content px-4 pb-4 text-slate-600">
+                                    <p>所有政府資助的長者護理服務都必須通過 My Aged Care 申請。您可以致電、在線申請，或請家庭醫生、醫院協助轉介。他們會問您一些基本問題，以了解您的需求。</p>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-slate-200 rounded-lg">
+                                <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold">
+                                    <span>2. 進行評估 (專人上門了解)</span>
+                                    <span class="accordion-icon text-teal-600 text-2xl transform transition-transform duration-300">＋</span>
+                                </button>
+                                <div class="accordion-content px-4 pb-4 text-slate-600">
+                                    <p>My Aged Care 會安排一位評估員到您家中進行評估。他們會與您交談，了解您在日常生活、健康、安全和個人目標方面的需求，過程輕鬆且以您為中心。</p>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-slate-200 rounded-lg">
+                                <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold">
+                                    <span>3. 獲取支援計劃及等待資金</span>
+                                    <span class="accordion-icon text-teal-600 text-2xl transform transition-transform duration-300">＋</span>
+                                </button>
+                                <div class="accordion-content px-4 pb-4 text-slate-600">
+                                    <p>評估後，您會收到一份「支援計劃」和「決定通知書」，列明您獲批的服務類型和資金等級。之後您會進入全國統一的輪候名單，根據您的緊急程度等待資金分配。</p>
+                                </div>
+                            </div>
+                            <div class="accordion-item bg-white border border-slate-200 rounded-lg">
+                                <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold">
+                                    <span>4. 選擇服務提供者</span>
+                                    <span class="accordion-icon text-teal-600 text-2xl transform transition-transform duration-300">＋</span>
+                                </button>
+                                <div class="accordion-content px-4 pb-4 text-slate-600">
+                                    <p>一旦資金分配給您，您需要在56天內選擇一家註冊的服務提供者並簽訂服務協議。您可以透過 My Aged Care 網站尋找您所在地區的服務提供者。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Support Levels -->
+                    <div>
+                        <h4 class="text-xl font-bold mb-4 text-center">第二步：我能獲得哪些支援？</h4>
+                        <div class="border border-slate-200 rounded-lg p-4 md:p-6">
+                            <p class="text-center text-slate-600 mb-4">支援分為「持續性服務」和「短期支援」兩大類，以滿足不同需求。</p>
+                            <div class="mb-6">
+                                <h5 class="font-bold text-lg mb-2 text-teal-700">持續性服務：8個不同等級的季度預算</h5>
+                                <p class="text-slate-600 mb-4">這是為滿足您長期護理需求而設的資金。等級越高，代表您每季度可獲得的預算越多。這筆預算可用於個人護理、家務助理、社交支援等服務。將滑鼠懸停在圖表上可查看具體金額。</p>
+                                <div class="chart-container">
+                                    <canvas id="fundingLevelsChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h5 class="font-bold text-lg mb-4 text-teal-700">短期支援：針對特定需求的專項資金</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 rounded-lg bg-slate-100 p-1">
+                                    <button class="short-term-tab tab-active p-3 text-sm font-semibold rounded-md transition" data-target="tab-restorative">復原護理</button>
+                                    <button class="short-term-tab tab-inactive p-3 text-sm font-semibold rounded-md transition" data-target="tab-eol">臨終關懷</button>
+                                    <button class="short-term-tab tab-inactive p-3 text-sm font-semibold rounded-md transition" data-target="tab-athm">輔助設備與改造</button>
+                                </div>
+                                <div class="mt-4 p-4 bg-white rounded-lg border border-slate-200 min-h-[120px]">
+                                    <div id="tab-restorative" class="short-term-content">
+                                        <h6 class="font-bold">復原護理途徑</h6>
+                                        <p class="text-slate-600">為期最長16週的密集支援，旨在幫助您恢復或維持身體功能，提升獨立性。例如手術後康復。每個療程資金約 \$6,000。</p>
+                                    </div>
+                                    <div id="tab-eol" class="short-term-content content-hidden">
+                                        <h6 class="font-bold">臨終關懷途徑</h6>
+                                        <p class="text-slate-600">為預期生命不足3個月並希望在家中安老的長者提供支援。提供一次性約 \$25,000 的預算，用於全面的舒適護理。</p>
+                                    </div>
+                                    <div id="tab-athm" class="short-term-content content-hidden">
+                                        <h6 class="font-bold">輔助科技與居家改造 (AT-HM)</h6>
+                                        <p class="text-slate-600">提供專項資金購買助行器、輪椅、淋浴椅等設備，或進行居家改造如安裝扶手、坡道，以提高您的居家安全和獨立性。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. Co-payment Calculator -->
+                    <div>
+                        <h4 class="text-xl font-bold mb-4 text-center">第三步：我需要支付多少費用？</h4>
+                        <div class="border border-slate-200 rounded-lg p-4 md:p-6">
+                            <p class="text-slate-600 mb-4">您需要支付的費用（稱為「參與者繳費」）取決於您的收入資產和所選服務類型。臨床服務（如護理）是完全由政府資助的。請使用下方的估算器了解大概的費用比例。</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="pensionStatus" class="font-semibold block mb-1">您的退休金狀況：</label>
+                                        <select id="pensionStatus" class="w-full p-2 border border-slate-300 rounded-md">
+                                            <option value="full">全額退休金領取者</option>
+                                            <option value="part">部分退休金領取者 / 持有聯邦長者健康卡</option>
+                                            <option value="self">自費退休人士 / 未披露資產</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="serviceType" class="font-semibold block mb-1">您想了解的服務類型：</label>
+                                        <select id="serviceType" class="w-full p-2 border border-slate-300 rounded-md">
+                                            <option value="clinical">臨床支援 (如護理、物理治療)</option>
+                                            <option value="living">獨立生活 (如個人護理、社交支援)</option>
+                                            <option value="home">日常居家生活 (如清潔、送餐)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="feeResult" class="p-6 bg-teal-50 rounded-lg text-center">
+                                    <p class="text-slate-600 mb-2">您需要承擔的費用比例約為：</p>
+                                    <p id="feePercentage" class="text-4xl font-bold text-teal-600">0%</p>
+                                    <p id="feeDescription" class="text-sm text-slate-500 mt-2">臨床支援服務由政府全額資助。</p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-4 text-center">**請注意：** 這只是一個估算工具。最終費用由澳洲服務局 (Services Australia) 根據您的詳細收入和資產評估決定。</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Section for Existing Users -->
+                <div id="existingUserContent" class="content-section space-y-8 content-hidden">
+                    
+                    <div class="p-6 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                        <h3 class="text-2xl font-bold text-amber-800 mb-4">現有HCP用戶指南：了解您的過渡安排</h3>
+                        <p class="text-amber-700">歡迎！您現有的居家護理套裝 (Home Care Package, HCP) 將平穩過渡到新的「居家支援」計劃。以下是專為您準備的關鍵資訊，旨在讓您安心。</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xl font-bold mb-2">核心原則：「不變差」保障 (No Disadvantage)</h4>
+                        <div class="p-4 bg-white border border-slate-200 rounded-lg">
+                            <p class="text-slate-600">這是最重要的過渡安排。它保障您在新計劃下的待遇不會比舊的HCP計劃差。具體來說：</p>
+                            <ul class="list-disc list-inside mt-2 space-y-1 text-slate-700">
+                                <li><strong>資金水平不變：</strong> 您將繼續獲得與您先前HCP等級相同的資金總額。</li>
+                                <li><strong>費用不增加：</strong> 您需要支付的費用將維持在現有水平，或更低。即使未來您被評估需要更高服務等級，您的繳費也會按「祖父級」費率計算，不會增加。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xl font-bold mb-2">我的HCP未使用資金會怎樣？</h4>
+                        <div class="p-4 bg-white border border-slate-200 rounded-lg">
+                            <p class="text-slate-600 mb-2">您在HCP計劃下累積的任何未使用資金都會被保留，並可以在新計劃下繼續使用。資金分為兩部分：</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                <div class="p-3 bg-slate-50 rounded-md">
+                                    <h5 class="font-semibold">聯邦政府持有的資金</h5>
+                                    <p class="text-sm text-slate-500">這部分資金會自動轉入您的「居家支援」帳戶，可用於支付服務費用。</p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-md">
+                                    <h5 class="font-semibold">服務提供者持有的資金</h5>
+                                    <p class="text-sm text-slate-500">這部分資金繼續由您現有的服務提供者保管，同樣可用於支付服務。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xl font-bold mb-2">好消息：新的輔助設備與居家改造 (AT-HM) 福利</h4>
+                        <div class="p-4 bg-white border border-slate-200 rounded-lg">
+                            <p class="text-slate-600 mb-2">作為「祖父級」用戶，您現在可以自動獲得新的 AT-HM 專項資金，用於購買設備或進行居家改造，而無需另外評估。這是一個重要的額外福利。</p>
+                            <div class="p-4 bg-amber-100 border border-amber-200 rounded-lg mt-2">
+                                <h5 class="font-semibold text-amber-800">使用順序請注意：</h5>
+                                <p class="text-amber-700">在您使用這筆新的專項AT-HM資金之前，您必須<strong class="font-bold">先用完您現有的HCP未使用資金</strong>。這是政府規定的資金使用優先順序。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <footer class="text-center mt-8">
+            <p class="text-xs text-slate-500">免責聲明：本網站為根據公開資訊製作的互動指南，旨在簡化理解。所有資訊應以 My Aged Care 和澳洲服務局 (Services Australia) 的官方公佈為準。</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnNewUser = document.getElementById('btnNewUser');
+            const btnExistingUser = document.getElementById('btnExistingUser');
+            const mainContent = document.getElementById('mainContent');
+            const newUserContent = document.getElementById('newUserContent');
+            const existingUserContent = document.getElementById('existingUserContent');
+            const userTypeBtns = document.querySelectorAll('.user-type-btn');
+
+            function setActiveButton(activeBtn) {
+                userTypeBtns.forEach(btn => {
+                    btn.classList.remove('bg-teal-600', 'text-white', 'border-teal-600');
+                    btn.classList.add('bg-white', 'text-slate-800', 'border-slate-300', 'hover:bg-teal-50', 'hover:border-teal-400');
+                });
+                activeBtn.classList.add('bg-teal-600', 'text-white', 'border-teal-600');
+                activeBtn.classList.remove('bg-white', 'text-slate-800', 'border-slate-300', 'hover:bg-teal-50', 'hover:border-teal-400');
+            }
+
+            btnNewUser.addEventListener('click', () => {
+                mainContent.classList.remove('content-hidden');
+                newUserContent.classList.remove('content-hidden');
+                existingUserContent.classList.add('content-hidden');
+                setActiveButton(btnNewUser);
+            });
+
+            btnExistingUser.addEventListener('click', () => {
+                mainContent.classList.remove('content-hidden');
+                existingUserContent.classList.remove('content-hidden');
+                newUserContent.classList.add('content-hidden');
+                setActiveButton(btnExistingUser);
+            });
+
+            // Accordion functionality
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+                const icon = item.querySelector('.accordion-icon');
+                header.addEventListener('click', () => {
+                    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+                    
+                    accordionItems.forEach(i => {
+                        i.querySelector('.accordion-content').style.maxHeight = '0px';
+                        i.querySelector('.accordion-icon').textContent = '＋';
+                        i.querySelector('.accordion-icon').classList.remove('rotate-45');
+                    });
+
+                    if (!isExpanded) {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.textContent = '－';
+                        icon.classList.add('rotate-45');
+                    }
+                });
+            });
+
+            // Short-term support tabs
+            const shortTermTabs = document.querySelectorAll('.short-term-tab');
+            const shortTermContents = document.querySelectorAll('.short-term-content');
+            shortTermTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    shortTermTabs.forEach(t => t.classList.replace('tab-active', 'tab-inactive'));
+                    tab.classList.replace('tab-inactive', 'tab-active');
+
+                    const targetId = tab.getAttribute('data-target');
+                    shortTermContents.forEach(content => {
+                        if (content.id === targetId) {
+                            content.classList.remove('content-hidden');
+                        } else {
+                            content.classList.add('content-hidden');
+                        }
+                    });
+                });
+            });
+
+            // Fee Calculator
+            const pensionStatus = document.getElementById('pensionStatus');
+            const serviceType = document.getElementById('serviceType');
+            const feePercentage = document.getElementById('feePercentage');
+            const feeDescription = document.getElementById('feeDescription');
+
+            const feeMatrix = {
+                full: { clinical: 0, living: 5, home: 17.5 },
+                part: { clinical: 0, living: '5% - 50%', home: '17.5% - 80%' },
+                self: { clinical: 0, living: 50, home: 80 }
+            };
+            
+            const descriptionMatrix = {
+                 clinical: "臨床支援服務由政府全額資助。",
+                 living: "此類服務有助於維持獨立生活。",
+                 home: "此類服務與日常居家生活相關。"
+            };
+
+            function updateFee() {
+                const status = pensionStatus.value;
+                const type = serviceType.value;
+                const fee = feeMatrix[status][type];
+                const desc = descriptionMatrix[type];
+
+                if (typeof fee === 'string') {
+                    feePercentage.textContent = fee;
+                } else {
+                    feePercentage.textContent = `${fee}%`;
+                }
+                feeDescription.textContent = desc;
+            }
+
+            pensionStatus.addEventListener('change', updateFee);
+            serviceType.addEventListener('change', updateFee);
+            updateFee();
+
+            // Funding Levels Chart
+            const ctx = document.getElementById('fundingLevelsChart').getContext('2d');
+            const fundingData = {
+                labels: ['等級 1', '等級 2', '等級 3', '等級 4', '等級 5', '等級 6', '等級 7', '等級 8'],
+                datasets: [{
+                    label: '季度預算 (澳元)',
+                    data: [2674.18, 3995.42, 5479.94, 7386.33, 9883.76, 11989.35, 14530.53, 19427.25],
+                    backgroundColor: '#ccfbf1',
+                    borderColor: '#0d9488',
+                    borderWidth: 2,
+                    borderRadius: 5,
+                    hoverBackgroundColor: '#0d9488',
+                    hoverBorderColor: '#0f766e'
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: fundingData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        const quarterly = context.parsed.y;
+                                        const annual = quarterly * 4;
+                                        label += new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(quarterly);
+                                        return [label, `年度約: ${new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(annual)}`];
+                                    }
+                                    return label;
+                                }
+                            },
+                            backgroundColor: '#134e4a',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return '$' + value / 1000 + 'k';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: '季度預算金額 (澳元)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
